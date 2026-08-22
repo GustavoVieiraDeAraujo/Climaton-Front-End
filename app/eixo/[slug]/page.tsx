@@ -1,168 +1,25 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell,
-} from 'recharts'
+import { useParams } from 'next/navigation'
+import { ArrowLeft, ArrowUpRight, BarChart3, Database, Info } from 'lucide-react'
 import { BrandLogo } from '@/components/brand-logo'
 import { api, type EixoComponente, type EixoTerritorio, type EixoDistribuicaoLinha, type EixoSlug } from '@/lib/api'
 
-const EIXO_META: Record<string, { nome: string; intro: string }> = {
-  'governanca': {
-    nome: 'Governança',
-    intro: 'Quadro legal, estrutura institucional, gestão de riscos, coordenação entre níveis de governo, engajamento social, justiça climática e fiscalização - 7 componentes (G1-G7), o eixo com mais itens do Painel ClimaBrasil.',
-  },
-  'politicas-publicas': {
-    nome: 'Políticas Públicas',
-    intro: 'Estratégias de mitigação e adaptação, políticas setoriais e defesa civil - 5 componentes (P1-P5) que medem se o plano de ação climática existe formalmente, não se ele já reduziu emissões ou risco.',
-  },
-  'financiamento': {
-    nome: 'Financiamento',
-    intro: 'Finanças e gastos públicos dedicados, captação de recursos externos e mobilização de investimento privado - 3 componentes (F1-F3), historicamente o eixo com as menores notas dos três.',
-  },
+const META: Record<string, { nome: string; intro: string; pergunta: string }> = {
+  governanca: { nome: 'Governança', intro: 'As instituições que coordenam a resposta climática: regras, capacidades, justiça e fiscalização.', pergunta: 'As estruturas estão prontas para transformar compromisso em ação?' },
+  'politicas-publicas': { nome: 'Políticas Públicas', intro: 'Planos de mitigação, adaptação, políticas setoriais e defesa civil em perspectiva comparável.', pergunta: 'O planejamento climático já aparece nas políticas do território?' },
+  financiamento: { nome: 'Financiamento', intro: 'Gastos, captação e investimento privado: os recursos que sustentam a transição climática.', pergunta: 'Há recursos suficientes e bem direcionados para agir?' },
 }
-
-const STAGE_ORDER = ['Sem progresso', 'Estágio inicial', 'Estágio intermediário', 'Estágio avançado', 'Não avaliado']
-const STAGE_COLOR: Record<string, string> = {
-  'Sem progresso': '#b3392b',
-  'Estágio inicial': '#c06a1e',
-  'Estágio intermediário': '#a6801c',
-  'Estágio avançado': '#1d6b4d',
-  'Não avaliado': '#9aa39c',
-}
-const BAR_COLOR = ['#1d6b4d', '#2c7d5b', '#3a8e6a', '#4d8a6e', '#5f9c7f', '#71ae90', '#83c0a1']
+const STAGES = ['Sem progresso', 'Estágio inicial', 'Estágio intermediário', 'Estágio avançado', 'Não avaliado']
+const STAGE_COLORS = ['#b3392b', '#c06a1e', '#a6801c', '#1d6b4d', '#9aa39c']
 
 export default function EixoPage() {
-  const params = useParams()
-  const slug = (Array.isArray(params.slug) ? params.slug[0] : params.slug) as EixoSlug
-  const meta = EIXO_META[slug]
-
-  const [componentes, setComponentes] = useState<EixoComponente[]>([])
-  const [territorios, setTerritorios] = useState<EixoTerritorio[]>([])
-  const [distribuicao, setDistribuicao] = useState<EixoDistribuicaoLinha[]>([])
-  const [fontes, setFontes] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!meta) return
-    setLoading(true)
-    Promise.all([
-      api.eixoComponentes(slug),
-      api.eixoTerritorios(slug),
-      api.eixoDistribuicao(slug),
-    ]).then(([c, t, d]) => {
-      setComponentes(c.dados)
-      setTerritorios(t.dados)
-      setDistribuicao(d.dados)
-      setFontes([c.fonte, t.fonte, d.fonte])
-      setLoading(false)
-    }).catch(() => setLoading(false))
-  }, [slug, meta])
-
-  const distribuicaoPorComponente = useMemo(() => {
-    const byCode: Record<string, Record<string, number>> = {}
-    distribuicao.forEach((row) => {
-      byCode[row.codigo] = byCode[row.codigo] || {}
-      byCode[row.codigo][row.estagio] = row.n
-    })
-    return Object.entries(byCode).map(([codigo, stages]) => ({ codigo, ...stages }))
-  }, [distribuicao])
-
-  const top10 = territorios.slice(0, 10)
-  const bottom5 = territorios.slice(-5).reverse()
-
-  if (!meta) {
-    return <main className="eixo-page"><p className="eixo-notfound">Eixo não encontrado. <Link href="/">Voltar ao início</Link></p></main>
-  }
-
-  return <main className="eixo-page">
-    <header className="site-header"><Link className="brand" href="/" aria-label="Clima em Ação, início"><BrandLogo size={40} /> CLIMA<span className="brand-muted">EM AÇÃO</span></Link><Link href="/#dashboard" className="header-link">← Voltar ao dashboard</Link></header>
-
-    <section className="eixo-hero section-wrap">
-      <span className="section-kicker">EIXO · PAINEL CLIMABRASIL</span>
-      <h1>{meta.nome}</h1>
-      <p className="eixo-intro">{meta.intro}</p>
-      {loading && <p className="eixo-loading">Consultando a API...</p>}
-    </section>
-
-    {!loading && <>
-      <section className="eixo-section section-wrap">
-        <div className="bi-panel-head"><h3>Média por componente</h3><small>0 a 1, todos os 51 territórios e itens avaliados</small></div>
-        <div className="eixo-chart-wrap">
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={componentes} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e6dc" vertical={false} />
-              <XAxis dataKey="codigo" tick={{ fontSize: 12, fill: '#6f7770' }} axisLine={{ stroke: '#d8ddd5' }} tickLine={false} />
-              <YAxis domain={[0, 1]} tick={{ fontSize: 11, fill: '#6f7770' }} axisLine={false} tickLine={false} />
-              <Tooltip
-                formatter={(value) => [`${Math.round(Number(value) * 100)}%`, 'média']}
-                labelFormatter={(codigo) => componentes.find((c) => c.codigo === codigo)?.nome ?? codigo}
-                contentStyle={{ fontSize: 12, borderRadius: 6, border: '1px solid #d8ddd5' }}
-              />
-              <Bar dataKey="media" radius={[4, 4, 0, 0]}>
-                {componentes.map((c, i) => <Cell key={c.codigo} fill={BAR_COLOR[i % BAR_COLOR.length]} />)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <span className="bi-fonte">fonte: {fontes[0]}</span>
-      </section>
-
-      <section className="eixo-section section-wrap on-dark-section">
-        <div className="bi-panel-head"><h3>Estágio de avaliação por componente</h3><small>quantas das 51 avaliações caíram em cada estágio, por componente</small></div>
-        <div className="eixo-chart-wrap">
-          <ResponsiveContainer width="100%" height={340}>
-            <BarChart data={distribuicaoPorComponente} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2e3f36" vertical={false} />
-              <XAxis dataKey="codigo" tick={{ fontSize: 12, fill: '#94a49a' }} axisLine={{ stroke: '#405249' }} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a49a' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6, background: '#1c2b23', border: '1px solid #405249', color: '#f5f5f0' }} />
-              {STAGE_ORDER.map((stage) => (
-                <Bar key={stage} dataKey={stage} stackId="a" fill={STAGE_COLOR[stage]} />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="bi-legend on-dark">
-          {STAGE_ORDER.map((s) => <span key={s}><i style={{ background: STAGE_COLOR[s] }} /> {s}</span>)}
-        </div>
-        <span className="bi-fonte on-dark">fonte: {fontes[2]}</span>
-      </section>
-
-      <section className="eixo-section section-wrap">
-        <div className="bi-panel-head"><h3>Territórios, do melhor ao pior neste eixo</h3><small>média dos componentes do eixo, por território (51 no total)</small></div>
-        <div className="eixo-ranking-grid">
-          <div>
-            <span className="panel-label">TOP 10</span>
-            <div className="hbar-list">
-              {top10.map((t) => (
-                <div className="hbar-row" key={t.territorio}>
-                  <span className="hbar-label">{t.territorio} <small>({t.tipo})</small></span>
-                  <span className="hbar-track"><span className="hbar-fill" style={{ width: `${t.media * 100}%`, background: 'linear-gradient(90deg, #1d6b4d, #4d8a6e)' }} /></span>
-                  <span className="hbar-value" style={{ color: '#1d6b4d' }}>{Math.round(t.media * 100)}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <span className="panel-label">5 ÚLTIMOS</span>
-            <div className="hbar-list">
-              {bottom5.map((t) => (
-                <div className="hbar-row" key={t.territorio}>
-                  <span className="hbar-label">{t.territorio} <small>({t.tipo})</small></span>
-                  <span className="hbar-track"><span className="hbar-fill" style={{ width: `${t.media * 100}%`, background: '#b3392b' }} /></span>
-                  <span className="hbar-value" style={{ color: '#b3392b' }}>{Math.round(t.media * 100)}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <span className="bi-fonte">fonte: {fontes[1]}</span>
-      </section>
-    </>}
-
-    <footer className="footer section-wrap"><div className="brand"><BrandLogo /> CLIMA<span className="brand-muted">EM AÇÃO</span></div><span>Dado real e auditado · dataset_unificado/clima_brasil_climate_scanner.sqlite</span><span>ClimatonBrasil 2026 · TCU</span></footer>
-  </main>
+  const params = useParams(); const slug = (Array.isArray(params.slug) ? params.slug[0] : params.slug) as EixoSlug; const meta = META[slug]
+  const [componentes, setComponentes] = useState<EixoComponente[]>([]); const [territorios, setTerritorios] = useState<EixoTerritorio[]>([]); const [distribuicao, setDistribuicao] = useState<EixoDistribuicaoLinha[]>([]); const [fontes, setFontes] = useState<string[]>([]); const [loading, setLoading] = useState(true)
+  useEffect(() => { if (!meta) return; setLoading(true); Promise.all([api.eixoComponentes(slug), api.eixoTerritorios(slug), api.eixoDistribuicao(slug)]).then(([c, t, d]) => { setComponentes(c.dados); setTerritorios(t.dados); setDistribuicao(d.dados); setFontes([c.fonte, t.fonte, d.fonte]) }).finally(() => setLoading(false)) }, [slug, meta])
+  const stages = useMemo(() => { const grouped: Record<string, Record<string, number>> = {}; distribuicao.forEach((row) => { grouped[row.codigo] ??= {}; grouped[row.codigo][row.estagio] = row.n }); return Object.entries(grouped).map(([codigo, values]) => ({ codigo, ...values })) }, [distribuicao])
+  if (!meta) return <main className="grid min-h-screen place-items-center p-6"><p>Eixo não encontrado. <Link className="text-primary underline" href="/">Voltar ao início</Link></p></main>
+  return <main className="min-h-screen bg-background text-foreground"><header className="sticky top-0 z-20 border-b border-border/60 bg-background/90 px-6 backdrop-blur md:px-10"><div className="mx-auto flex h-20 max-w-screen-2xl items-center justify-between"><Link href="/" className="flex items-center gap-3 text-sm font-bold tracking-[0.12em]"><BrandLogo size={36} /> CLIMA<span className="font-normal text-muted-foreground">EM AÇÃO</span></Link><Link href="/#dashboard" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"><ArrowLeft aria-hidden="true" /> Voltar ao panorama</Link></div></header><div className="mx-auto flex max-w-screen-2xl flex-col gap-8 px-6 py-12 md:px-10 lg:px-16 lg:py-20"><section className="grid gap-8 border-b border-border pb-14 lg:grid-cols-[1.35fr_.65fr] lg:items-end"><div><p className="font-mono text-xs tracking-[0.22em] text-primary">EIXO · PAINEL CLIMABRASIL</p><h1 className="mt-6 text-balance text-6xl font-semibold tracking-[-0.07em] md:text-8xl">{meta.nome}</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">{meta.intro}</p></div><aside className="border-l-2 border-primary pl-5"><p className="font-mono text-xs tracking-wider text-muted-foreground">PERGUNTA-GUIA</p><p className="mt-3 text-xl font-medium leading-7">{meta.pergunta}</p></aside></section>{loading ? <div className="grid min-h-96 place-items-center rounded-3xl border border-dashed border-border"><p className="text-muted-foreground">Consultando dados auditados...</p></div> : <><section className="grid gap-4 md:grid-cols-3"><div className="rounded-2xl bg-primary p-6 text-primary-foreground"><p className="font-mono text-xs opacity-70">COMPONENTES</p><strong className="mt-5 block text-5xl">{componentes.length}</strong><p className="mt-2 text-sm opacity-80">dimensões avaliadas</p></div><div className="rounded-2xl border border-border bg-card p-6"><p className="font-mono text-xs text-muted-foreground">TERRITÓRIOS</p><strong className="mt-5 block text-5xl text-primary">{territorios.length}</strong><p className="mt-2 text-sm text-muted-foreground">com dados comparáveis</p></div><div className="rounded-2xl border border-border bg-card p-6"><p className="font-mono text-xs text-muted-foreground">LEITURA</p><strong className="mt-5 block text-3xl">0–100%</strong><p className="mt-2 text-sm text-muted-foreground">média por componente</p></div></section><section className="grid gap-6 lg:grid-cols-[1.4fr_.6fr]"><article className="rounded-3xl border border-border bg-card p-6 md:p-8"><div className="flex items-start justify-between gap-4"><div><p className="font-mono text-xs tracking-wider text-primary">01 · COMPONENTES</p><h2 className="mt-3 text-2xl font-semibold">Onde estão as maiores lacunas?</h2><p className="mt-2 text-sm text-muted-foreground">Média das avaliações nos {territorios.length} territórios.</p></div><BarChart3 className="text-primary" aria-hidden="true" /></div><div className="mt-10 flex h-64 items-end gap-3 border-b border-border">{componentes.map((c) => <div key={c.codigo} className="group flex min-w-0 flex-1 flex-col items-center justify-end gap-2"><span className="text-xs font-semibold text-primary opacity-0 transition-opacity group-hover:opacity-100">{Math.round(c.media * 100)}%</span><div className="w-full rounded-t-md bg-primary/80 transition-all group-hover:bg-primary" style={{ height: `${Math.max(c.media * 100, 3)}%` }} title={`${c.nome}: ${Math.round(c.media * 100)}%`} /><span className="font-mono text-xs text-muted-foreground">{c.codigo}</span></div>)}</div><p className="mt-6 text-xs text-muted-foreground">Fonte: {fontes[0]}</p></article><aside className="rounded-3xl bg-muted/50 p-6 md:p-8"><Info className="text-primary" aria-hidden="true" /><h2 className="mt-5 text-2xl font-semibold">O que estes dados mostram</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">Este espaço pode receber a interpretação editorial do eixo: uma leitura sobre os contrastes, hipóteses e decisões que os dados ajudam a tornar visíveis.</p><div className="mt-8 border-t border-border pt-5"><p className="font-mono text-xs tracking-wider text-muted-foreground">PRÓXIMA LEITURA</p><p className="mt-2 text-sm font-medium">Compare a distribuição por estágio e o ranking dos territórios.</p></div></aside></section><section className="rounded-3xl bg-[var(--dark)] p-6 text-[var(--paper)] md:p-8"><p className="font-mono text-xs tracking-wider text-[var(--lime)]">02 · ESTÁGIOS</p><h2 className="mt-3 text-2xl font-semibold">O estágio de avaliação por componente</h2><div className="mt-8 flex flex-col gap-5">{stages.map((row) => <div key={row.codigo} className="grid gap-2 md:grid-cols-[4rem_1fr]"><span className="font-mono text-sm text-white/60">{row.codigo}</span><div className="flex h-9 overflow-hidden rounded-md bg-white/10">{STAGES.map((stage, i) => row[stage] ? <div key={stage} className="flex items-center justify-center text-[10px] font-semibold text-white" style={{ width: `${(Number(row[stage]) / 51) * 100}%`, backgroundColor: STAGE_COLORS[i] }} title={`${stage}: ${row[stage]}`}>{Number(row[stage]) > 3 ? row[stage] : ''}</div> : null)}</div></div>)}</div><p className="mt-6 text-xs text-white/50">Fonte: {fontes[2]}</p></section><section className="rounded-3xl border border-border bg-card p-6 md:p-8"><div className="flex items-end justify-between gap-4"><div><p className="font-mono text-xs tracking-wider text-primary">03 · TERRITÓRIOS</p><h2 className="mt-3 text-2xl font-semibold">Quem está na frente?</h2></div><Database className="text-primary" aria-hidden="true" /></div><div className="mt-8 grid gap-x-10 gap-y-4 md:grid-cols-2">{territorios.slice(0, 10).map((t, i) => <div key={t.territorio} className="flex items-center gap-3"><span className="w-6 font-mono text-xs text-muted-foreground">{String(i + 1).padStart(2, '0')}</span><span className="min-w-0 flex-1 truncate text-sm">{t.territorio}</span><div className="h-2 w-24 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${t.media * 100}%` }} /></div><span className="w-10 text-right text-xs font-semibold text-primary">{Math.round(t.media * 100)}%</span></div>)}</div><p className="mt-8 text-xs text-muted-foreground">Fonte: {fontes[1]}</p></section></>}</div><footer className="border-t border-border px-6 py-8 text-xs text-muted-foreground md:px-10"><div className="mx-auto flex max-w-screen-2xl flex-col justify-between gap-3 md:flex-row"><span>Dados reais e auditados · ClimatonBrasil 2026</span><Link href="/#dashboard" className="flex items-center gap-2 text-primary">Explorar outros eixos <ArrowUpRight /></Link></div></footer></main>
 }
