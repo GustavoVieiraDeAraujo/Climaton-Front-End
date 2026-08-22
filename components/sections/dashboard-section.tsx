@@ -1,7 +1,7 @@
 import { EixoCards } from '@/components/eixo-cards'
 
 export function DashboardSection() {
-  return <section id="dashboard" className="bg-[var(--dark)] py-8 text-[var(--paper)]">
+  return <section id="dashboard" data-story="dashboard" className="bg-[var(--dark)] py-8 text-[var(--paper)]">
     <div className="mx-auto flex w-full max-w-screen-2xl flex-col justify-center gap-8 px-6 md:px-10 lg:px-16">
       <div className="border-b border-white/15 pb-6">
         <p className="font-mono text-xs tracking-[0.22em] text-[var(--lime)]">02 · EIXOS</p>
