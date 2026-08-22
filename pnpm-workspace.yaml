@@ -1,0 +1,3 @@
+allowBuilds:
+  msw: true
+minimumReleaseAge: 0

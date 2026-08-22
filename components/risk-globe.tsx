@@ -8,19 +8,32 @@ type RiskPoint = {
   lat: number
   lng: number
   risk: number
+  capacidade?: number
+  prioridade?: string | null
   label: string
   insight: string
+}
+
+const PRIORIDADE_COR: Record<string, string> = {
+  'Crítico': '#e0574a', 'Alto': '#d98a3f', 'Médio': '#d6e85c', 'Baixo': '#3f9d76',
+}
+const PRIORIDADE_RAIO: Record<string, number> = {
+  'Crítico': 0.5, 'Alto': 0.36, 'Médio': 0.24, 'Baixo': 0.15,
 }
 
 const Globe = dynamic(() => import('react-globe.gl'), { ssr: false })
 
 // Vista travada no Brasil: centro geográfico aproximado do território, altitude fixa que
-// enquadra bem os 5 pontos críticos (todos no Norte/Nordeste). Zoom desabilitado (enableZoom
+// enquadra bem as 27 capitais (todo o território nacional). Zoom desabilitado (enableZoom
 // false) e rotação limitada a poucos graus em torno desse centro - dá pra "sentir" que é um
 // globo 3D sem sair da região do Brasil.
 const BRAZIL_VIEW = { lat: -14, lng: -53, altitude: 1.45 }
 const ROTATION_LIMIT = 0.35 // radianos (~20°) de folga em cada eixo
 
+// Única perspectiva do globo: panorama nacional (27 capitais, coloridas por prioridade real -
+// risco físico x capacidade institucional). Substituiu o toggle risco/capacidade dos 5
+// territórios críticos - essa visão ampla já cobre os 5 críticos (estão entre os pontos) sem
+// duplicar a mesma informação em 3 modos diferentes.
 export function RiskGlobe({ points, selected, onSelect }: { points: RiskPoint[]; selected: string; onSelect: (point: RiskPoint) => void }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const globeRef = useRef<any>(null)
@@ -61,7 +74,7 @@ export function RiskGlobe({ points, selected, onSelect }: { points: RiskPoint[];
   }, [])
 
   return (
-    <div className="globe-shell" aria-label="Globo interativo com pontos de risco climático no Brasil">
+    <div className="globe-shell" aria-label="Globo interativo com as 27 capitais do Brasil, coloridas por prioridade climática">
       <Globe
         ref={globeRef}
         width={650}
@@ -77,11 +90,21 @@ export function RiskGlobe({ points, selected, onSelect }: { points: RiskPoint[];
         pointsData={points}
         pointLat="lat"
         pointLng="lng"
-        pointColor={(point: object) => ((point as RiskPoint).risk > 80 ? '#d6e85c' : '#75b89a')}
-        pointRadius={(point: object) => ((point as RiskPoint).risk / 100) * 0.6}
+        pointColor={(point: object) => {
+          const p = point as RiskPoint
+          return p.prioridade ? PRIORIDADE_COR[p.prioridade] : '#5a6b62'
+        }}
+        pointRadius={(point: object) => {
+          const p = point as RiskPoint
+          return p.prioridade ? PRIORIDADE_RAIO[p.prioridade] : 0.08
+        }}
         pointAltitude={0.04}
-        pointLabel={(point: object) => `${(point as RiskPoint).name}: ${(point as RiskPoint).risk}% de risco`}
-        onPointClick={(point: object) => onSelect(point as RiskPoint)}
+        pointLabel={(point: object) => (point as RiskPoint).label}
+        onPointClick={(point: object) => {
+          const p = point as RiskPoint
+          if (p.risk < 0) return // sem avaliação institucional - nada pra mostrar no painel
+          onSelect(p)
+        }}
         ringsData={rings}
         ringLat="lat"
         ringLng="lng"
@@ -90,7 +113,6 @@ export function RiskGlobe({ points, selected, onSelect }: { points: RiskPoint[];
         ringPropagationSpeed={1.5}
         ringRepeatPeriod={900}
       />
-      <p className="globe-note">Arraste um pouco pra explorar - a vista fica travada na região do Brasil.</p>
     </div>
   )
 }

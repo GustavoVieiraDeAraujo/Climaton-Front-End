@@ -14,11 +14,9 @@ export function AccessibilityPanel() {
   const [contrast, setContrast] = useState<ContrastMode>('normal')
   const [theme, setTheme] = useState<ThemeMode>('light')
 
-  useEffect(() => {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    setTheme(prefersDark ? 'dark' : 'light')
-  }, [])
-
+  // De propósito, SEM detecção de tema do sistema operacional - o site sempre abre em
+  // Padrão/Padrão/Claro, não importa a preferência do SO do visitante. Só muda se a
+  // pessoa escolher outra opção aqui no painel.
   useEffect(() => {
     const root = document.documentElement
     root.dataset.textSize = textSize

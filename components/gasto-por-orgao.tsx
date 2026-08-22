@@ -15,11 +15,10 @@ const DIMENSOES: { key: Dimensao; label: string }[] = [
 // quem gasta mais em quê") em vez de mais uma tabela estática.
 export function GastoPorOrgao() {
   const [rows, setRows] = useState<OrgaoGasto[]>([])
-  const [fonte, setFonte] = useState('')
   const [dimensao, setDimensao] = useState<Dimensao>('gasto_clima')
 
   useEffect(() => {
-    api.gastosPorOrgao(8).then((r) => { setRows(r.dados); setFonte(r.fonte) }).catch(() => {})
+    api.gastosPorOrgao(8).then((r) => setRows(r.dados)).catch(() => {})
   }, [])
 
   const sorted = useMemo(() => [...rows].sort((a, b) => b[dimensao] - a[dimensao]), [rows, dimensao])
@@ -45,6 +44,5 @@ export function GastoPorOrgao() {
       ))}
       {rows.length === 0 && <span className="bi-fonte on-dark">Carregando da API…</span>}
     </div>
-    {fonte && <span className="bi-fonte on-dark">fonte: {fonte}</span>}
   </div>
 }

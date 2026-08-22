@@ -62,7 +62,6 @@ const priorityColor: Record<string, string> = {
 export function BrazilMap() {
   const [capitals, setCapitals] = useState(fallbackCapitals)
   const [selected, setSelected] = useState(fallbackCapitals[3])
-  const [live, setLive] = useState(false)
 
   useEffect(() => {
     api.capitais().then((r) => {
@@ -73,7 +72,6 @@ export function BrazilMap() {
       }))
       setCapitals(mapped)
       setSelected(mapped.find((c) => c.uf === 'AM') ?? mapped[3])
-      setLive(true)
     }).catch(() => {})
   }, [])
 
@@ -103,7 +101,6 @@ export function BrazilMap() {
           )
         })}
       </ComposableMap>
-      <span className="map-caption">27 capitais (24 avaliadas pelo Painel ClimaBrasil + DF) · clique em um ponto para explorar {live ? '· dado ao vivo da API' : '· último dado real conhecido'}</span>
     </div>
     <aside className="map-insight">
       <span className="panel-label">CAPITAL SELECIONADA · {selected.uf}</span>
@@ -121,7 +118,7 @@ export function BrazilMap() {
         <span><i className="dot" style={{ background: priorityColor['Baixo'] }} /> baixo</span>
         <span><i className="dot" style={{ background: '#9aa39c' }} /> sem avaliação</span>
       </div>
-      <span className="ai-insight-note">fonte: risco - AdaptaBrasil (MCTI); prioridade - view climate_gap_prioridade, dataset_unificado/clima_brasil_climate_scanner.sqlite, servida por api/main.py</span>
+      <span className="ai-insight-note">27 capitais (24 avaliadas pelo Painel ClimaBrasil + DF) · clique em um ponto para explorar</span>
     </aside>
   </div>
 }

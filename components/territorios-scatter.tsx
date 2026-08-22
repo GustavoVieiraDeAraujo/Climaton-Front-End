@@ -21,12 +21,11 @@ const PAD = 44
 // pra pré-visualizar sem clicar.
 export function TerritoriosScatter() {
   const [rows, setRows] = useState<Territorio[]>([])
-  const [fonte, setFonte] = useState('')
   const [hover, setHover] = useState<Territorio | null>(null)
   const [pinned, setPinned] = useState<Territorio | null>(null)
 
   useEffect(() => {
-    api.territorios().then((r) => { setRows(r.dados); setFonte(r.fonte) }).catch(() => {})
+    api.territorios().then((r) => setRows(r.dados)).catch(() => {})
   }, [])
 
   const active = hover || pinned
@@ -92,6 +91,5 @@ export function TerritoriosScatter() {
         </>}
       </aside>
     </div>
-    {fonte && <span className="bi-fonte">fonte: {fonte}</span>}
   </div>
 }

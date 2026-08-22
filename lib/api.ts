@@ -9,6 +9,19 @@ async function get<T>(path: string): Promise<T> {
   return res.json() as Promise<T>
 }
 
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const detalhe = await res.json().catch(() => null)
+    throw new Error(detalhe?.detail || `API ${path} respondeu ${res.status}`)
+  }
+  return res.json() as Promise<T>
+}
+
 export type Territorio = {
   territorio: string
   tipo: string
@@ -45,6 +58,19 @@ export type Cobertura = {
 }
 
 export type GastoSerieItem = { ano: number; valor: number; pct_do_pico: number }
+
+export type GastoDesastresAno = { ano: number; recuperacao: number; prevencao: number }
+export type GastoDesastres = {
+  resposta_recuperacao: number
+  reducao_risco_bruto: number
+  reducao_risco_limpo: number
+  compreensao_e_governanca: number
+  prevencao_total: number
+  razao_recuperacao_por_prevencao: number | null
+  serie_anual: GastoDesastresAno[]
+  alerta: string
+  fonte: string
+}
 
 export type GastoResumo = {
   total_positivo: number
@@ -85,6 +111,21 @@ export type EixoSlug = 'governanca' | 'politicas-publicas' | 'financiamento'
 export type EixoComponente = { codigo: string; nome: string; media: number; n_avaliacoes: number }
 export type EixoTerritorio = { territorio: string; tipo: string; media: number }
 export type EixoDistribuicaoLinha = { codigo: string; estagio: string; n: number }
+export type EixoRegiaoLinha = { regiao: string; media: number; n_territorios: number }
+
+export type QualidadeFonte = { dimensao: string; classificacao: string; resumo: string }
+export type Fonte = {
+  fonte_id: number
+  codigo: string
+  nome: string
+  descricao: string
+  arquivo_origem: string
+  qualidade: QualidadeFonte[]
+}
+
+export type ChatMensagem = { role: 'user' | 'assistant'; text: string }
+export type ChatAction = { type: 'scroll_to_section'; target: string }
+export type ChatResponse = { reply: string; actions: ChatAction[]; fontes: string[]; resolvido_localmente: boolean }
 
 export const api = {
   territorios: () => get<{ dados: Territorio[]; total: number; fonte: string }>('/territorios'),
@@ -93,6 +134,7 @@ export const api = {
   cobertura: () => get<Cobertura>('/cobertura'),
   gastosSerieAnual: () => get<{ dados: GastoSerieItem[]; fonte: string }>('/gastos/serie-anual'),
   gastosResumo: () => get<GastoResumo>('/gastos/resumo'),
+  gastosDesastres: () => get<GastoDesastres>('/gastos/desastres-prevencao-vs-recuperacao'),
   justicaClimatica: () => get<JusticaClimatica>('/justica-climatica'),
   comparacaoBrasilMundo: () => get<{ dados: ComparacaoLinha[]; fonte: string }>('/comparacao-brasil-mundo'),
   gastosPorOrgao: (limit = 8) => get<{ dados: OrgaoGasto[]; fonte: string }>(`/gastos/por-orgao?limit=${limit}`),
@@ -100,4 +142,7 @@ export const api = {
   eixoComponentes: (slug: EixoSlug) => get<{ eixo: string; dados: EixoComponente[]; fonte: string }>(`/eixo/${slug}/componentes`),
   eixoTerritorios: (slug: EixoSlug) => get<{ eixo: string; dados: EixoTerritorio[]; total: number; fonte: string }>(`/eixo/${slug}/territorios`),
   eixoDistribuicao: (slug: EixoSlug) => get<{ eixo: string; dados: EixoDistribuicaoLinha[]; fonte: string }>(`/eixo/${slug}/distribuicao`),
+  eixoRegioes: (slug: EixoSlug) => get<{ eixo: string; dados: EixoRegiaoLinha[]; fonte: string }>(`/eixo/${slug}/regioes`),
+  chat: (message: string, history: ChatMensagem[]) => post<ChatResponse>('/chat', { message, history }),
+  fontes: () => get<{ dados: Fonte[]; fonte: string }>('/fontes'),
 }

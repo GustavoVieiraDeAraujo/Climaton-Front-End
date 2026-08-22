@@ -10,11 +10,10 @@ import { api, type ComparacaoLinha } from '@/lib/api'
 // clicável pra fixar o detalhe.
 export function ComparacaoBrasilMundo() {
   const [rows, setRows] = useState<ComparacaoLinha[]>([])
-  const [fonte, setFonte] = useState('')
   const [active, setActive] = useState<ComparacaoLinha | null>(null)
 
   useEffect(() => {
-    api.comparacaoBrasilMundo().then((r) => { setRows(r.dados); setFonte(r.fonte) }).catch(() => {})
+    api.comparacaoBrasilMundo().then((r) => setRows(r.dados)).catch(() => {})
   }, [])
 
   const sorted = useMemo(
@@ -56,6 +55,5 @@ export function ComparacaoBrasilMundo() {
       <strong>{active.componente_brasil} · {active.nome_componente}</strong>
       <p>Subnacional real: {Math.round(active.media_brasil_subnacional * 100)}% · Brasil-país: {Math.round(active.media_brasil_como_pais_no_global * 100)}% · Mundo: {Math.round(active.media_mundial * 100)}%</p>
     </div>}
-    {fonte && <span className="bi-fonte on-dark">fonte: {fonte}</span>}
   </div>
 }
