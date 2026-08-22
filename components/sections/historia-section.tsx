@@ -1,7 +1,7 @@
 import { AiInsight } from '@/components/ai-insight'
 
 export function HistoriaSection() {
-  return <section id="historia" data-story="historia" className="story section-wrap">
+  return <section id="historia" data-story="historia" className="story section-wrap min-h-[70svh] py-24 lg:py-36">
     <div className="section-kicker">01 - A HISTÓRIA</div>
     <div className="story-grid">
       <div><h2>O futuro não chega de uma vez.<br /><span>Ele se acumula.</span></h2></div>

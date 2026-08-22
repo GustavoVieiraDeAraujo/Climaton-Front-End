@@ -1,7 +1,7 @@
 import { HeroScene } from '@/components/hero-scene'
 
 export function HeroSection() {
-  return <section id="inicio" className="hero section-wrap">
+  return <section id="inicio" className="hero section-wrap min-h-[calc(100svh-5rem)] py-20 lg:py-28">
     <HeroScene />
     <div className="eyebrow"><span className="eyebrow-dot" /> CLIMA EM AÇÃO · DATA STORY</div>
     <h1>A distância entre<br /><em>saber e agir.</em></h1>

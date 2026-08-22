@@ -1,7 +1,7 @@
 import { AiInsight } from '@/components/ai-insight'
 
 export function AcaoSection() {
-  return <section id="acao" data-story="acao" className="action section-wrap">
+  return <section id="acao" data-story="acao" className="action section-wrap min-h-[60svh] py-24 lg:py-36">
     <div className="section-kicker">06 - A AÇÃO</div>
     <h2>Dados mostram o caminho.<br /><em>A escolha é nossa.</em></h2>
     <div className="action-grid">

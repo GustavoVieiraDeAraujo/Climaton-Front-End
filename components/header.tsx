@@ -7,12 +7,9 @@ export function Header() {
     </a>
     <nav aria-label="Navegação principal">
       <a href="#historia">01 - História</a>
-      <a href="#dashboard">02 - Dados</a>
-      <a href="#territorio">03 - Território</a>
-      <a href="#mapa">04 - Mapa</a>
-      <a href="#insights">05 - Insights</a>
-      <a href="#acao">06 - Ação</a>
-      <a href="#inicio">07 - Sobre o Projeto</a>
+      <a href="#dashboard">02 - A pergunta</a>
+      <a href="#dashboard">03 - Os três eixos</a>
+      <a href="#acao">04 - Ação</a>
     </nav>
   </header>
 }
