@@ -1,7 +1,7 @@
 import { BrandLogo } from '@/components/brand-logo'
 
 export function Header() {
-  return <header className="site-header">
+  return <header className="site-header" role="banner">
     <a className="brand" href="#inicio" aria-label="Clima em Ação, início">
       <BrandLogo size={40} /> CLIMA<span className="brand-muted">EM AÇÃO</span>
     </a>

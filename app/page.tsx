@@ -10,14 +10,16 @@ import { HistoriaSection } from '@/components/sections/historia-section'
 import { StoryCloud } from '@/components/story-cloud'
 
 export default function Page() {
-  return <main>
+  return <>
     <Header />
-    <HeroSection />
-    <HistoriaSection />
-    <DashboardSection />
-    <AcaoSection />
+    <main id="conteudo-principal" tabIndex={-1}>
+      <HeroSection />
+      <HistoriaSection />
+      <DashboardSection />
+      <AcaoSection />
+    </main>
     <Footer />
     <StoryCloud />
     <DataChatbot />
-  </main>
+  </>
 }

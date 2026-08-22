@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { AccessibilityPanel } from '@/components/accessibility-panel'
 
 export const metadata: Metadata = {
   title: 'Clima em Ação - A distância entre saber e agir',
@@ -41,7 +42,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="bg-background">
       <body className="antialiased">
+        <a className="skip-link" href="#conteudo-principal">Pular para o conteúdo principal</a>
         {children}
+        <AccessibilityPanel />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
